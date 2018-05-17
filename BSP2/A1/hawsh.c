@@ -20,7 +20,8 @@
 void type_prompt() {
     char cwd[256];
     getcwd(cwd, sizeof(cwd));
-    printf("%s@%s > ", getenv("USERNAME"), cwd);
+    //printf("%s@%s > ", getenv("USERNAME"), cwd);    // for window and linux
+    printf("%s@%s > ", getenv("USER"), cwd);        // for macos
 }
 
 
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
         } 
         // quit
         else if (strcmp(command, "quit") == 0) {
-            printf("Tschüß!\n");
+            printf("Tschüss!\n");
             exit(EXIT_SUCCESS);
         } 
         // change directory when command starts with "/" (if directory is real)
