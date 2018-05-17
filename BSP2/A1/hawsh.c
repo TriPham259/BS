@@ -29,7 +29,8 @@ void type_prompt() {
  * Reads the keyboard input Stream and saves the input into param command
  *
  * @param command: Holds the user input
- * @return 0 for a command without &, 1 for a command with & (number of command running in background)
+ * @return Return 0 for command without &. (command waits for background process)
+ *			 Return 1 for command with &.
  */
 int read_command(char* command) {
     fgets(command, 128, stdin);
@@ -111,9 +112,9 @@ int main(int argc, char *argv[]) {
                 continue;                        
             }
             if(PIDstatus > 0){
-                // (?)
+                // let parennt process wait for child process
                 if(command_in_background == 0){
-                    waitpid(PIDstatus, &status, 0);   // Elternprozess wartet auf Kind
+                    waitpid(PIDstatus, &status, 0);   
                 }
             } else {
                 // execute the command
