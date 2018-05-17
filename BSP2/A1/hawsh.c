@@ -12,10 +12,11 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 
 void prompt_command();
 int read_command();
-void usage();
+void help();
 void version();
 
 const int command_size = 100;
@@ -35,6 +36,10 @@ int main(int argc, char *argv[]) {
 			printf("... und Tschüß!\n");
 			exit(EXIT_SUCCESS);
 		}
+		// print help
+		if (strcmp(command, "help") == 0) {
+			help();
+		}
 		// print version
 		else if (strcmp(command, "version") == 0) {
 			version();
@@ -47,6 +52,7 @@ int main(int argc, char *argv[]) {
 		}
 		// execute built-in commands of shell (without options, arguments)
 		else {
+			// create child process
 			int PIDstatus = fork();
 
 			if (PIDstatus < 0) {
@@ -54,12 +60,12 @@ int main(int argc, char *argv[]) {
 				continue;
 			}
 
-			if (PIDstatus > 0) {
+			if (PIDstatus > 0) { // parent process
 				// let parent process wait for child process
 				if (command_in_background == 0) {
 					waitpid(PIDstatus, &status, 0);
 				}
-			} else {
+			} else { // child process
 				// execute the command 
 				int returnVal; 
 				returnVal = execlp(command, command, NULL); 
@@ -105,7 +111,7 @@ int read_command(char* command) {
 }
 
 // Show list of commands and their usage.
-void usage() {
+void help() {
 	printf("HAW-Shell is a shell, which can execute built-in commands (without options, arguments) and following built-in commands:\n");
     printf("quit        - close HAW-Shell\n");
     printf("version     - show the current version of HAW-Shell\n");
