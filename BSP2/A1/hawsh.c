@@ -12,123 +12,108 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
-//#include <wait.h>
 
-/**
- * Prints the Prompt String
- */
-void type_prompt() {
-    char cwd[256];
-    getcwd(cwd, sizeof(cwd));
-    //printf("%s@%s > ", getenv("USERNAME"), cwd);    // for window and linux
-    printf("%s@%s > ", getenv("USER"), cwd);        // for macos
-}
+void prompt_command();
+int read_command();
+void usage();
+void version();
 
+const int command_size = 100;
 
-/**
- * Reads the keyboard input Stream and saves the input into param command
- *
- * @param command: Holds the user input
- * @return Return 0 for command without &. (command waits for background process)
- *			 Return 1 for command with &.
- */
-int read_command(char* command) {
-    fgets(command, 128, stdin);
-    
-    // remove newline at the end of command
-    command[strlen(command) - 1] = '\0';
-    
-    if (command[strlen(command) - 1] == '&') {
-        command[strlen(command) - 1] = '\0';
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-/**
- * Prints help text
- */
-void usage() {
-    printf("hawsh is a shell, which can execute the following built-in commands:\n");
-    printf("help - shows this help message\n");
-    printf("version - shows the current version of hawsh\n");
-    printf("/[pathname] - change the current working directory to pathname\n");
-    printf("quit - closes hawsh");
-}
-
-/**
- * Prints version info
- */
-void version() {
-    printf("1.0\n");
-}
-
-
-/**
- * Main function
- * @param argc
- * @param argv
- * @return
- */
+// Main function. 
 int main(int argc, char *argv[]) {
+	int command_in_background = 0; 
+	int status = 0; 
+	char command[command_size];
 
-    int command_in_background = 0;
-    int status = 0;
-    char command[128];
+	while (true) {
+		prompt_command();
 
-    while (true) {
-        // print promt string at the start of each line
-        type_prompt();
-
-        //read command from keyboard
-        command_in_background = read_command(command);
-
-        // print usage when command  == "help"
-        if (strcmp(command, "help") == 0) {
-            usage();
-        } 
-        // print version when command == "version"
-        else if (strcmp(command, "version") == 0) {
-            version();
-        } 
-        // quit
-        else if (strcmp(command, "quit") == 0) {
-            printf("Tschüss!\n");
-            exit(EXIT_SUCCESS);
-        } 
-        // change directory when command starts with "/" (if directory is real)
-        else if (strncmp(command, "/", 1) == 0) {
-            // change directory, prompt error if failed
-            if(chdir(command) == -1) {
-                printf("failed to change directory");
+		command_in_background = read_command(command);
+		// exit shell
+		if (strcmp(command, "quit") == 0) {
+			printf("... und Tschüß!\n");
+			exit(EXIT_SUCCESS);
+		}
+		// print version
+		else if (strcmp(command, "version") == 0) {
+			version();
+		}
+		// change directory, if command starts with "/"
+		else if (strncmp(command, "/", 1) == 0) {
+			if(chdir(command) == -1) {
+                printf("Failed to change directory.");
             }
-        } 
-        // execute a non-built-in command
-        else {
-            int PIDstatus = fork();              
-            if (PIDstatus < 0){
-                printf("Unable to fork\n");      
-                continue;                        
-            }
-            if(PIDstatus > 0){
-                // let parennt process wait for child process
-                if(command_in_background == 0){
-                    waitpid(PIDstatus, &status, 0);   
-                }
-            } else {
-                // execute the command
-                int returnVal = 0;
-                returnVal = execlp(command, command, NULL);
+		}
+		// execute built-in commands of shell (without options, arguments)
+		else {
+			int PIDstatus = fork();
 
-                // prompt message if the command isn't available
-                if(returnVal == -1)
-                {
-                    printf("unknown command\n");
-                    exit(0);
-                }
+			if (PIDstatus < 0) {
+				printf("Unable to fork.\n");
+				continue;
+			}
 
-            }
-        }
-    }
+			if (PIDstatus > 0) {
+				// let parent process wait for child process
+				if (command_in_background == 0) {
+					waitpid(PIDstatus, &status, 0);
+				}
+			} else {
+				// execute the command 
+				int returnVal; 
+				returnVal = execlp(command, command, NULL); 
+
+				// print error message if command is not possible
+				if (returnVal == -1) {
+					printf("Unknown command.\n");
+					exit(0);
+				}
+			}
+		}
+	}
+}
+
+// Prompt user for command. 
+void prompt_command() {
+	// get current working directory
+	char cwd[300];
+	getcwd(cwd, sizeof(cwd));
+
+	// print prompt string
+	printf("%s@%s > ", getenv("USER"), cwd);          // for MacOS und Linux
+	//printf("%s@%s > ", getenv("USERNAME"), cwd);    // for Window and Linux
+}
+
+// Read command user types in.
+// Return 0 for command without &. 
+// Return 1 for command with &. (command waits for background process)  
+int read_command(char* command) {
+	fgets(command, command_size, stdin);
+
+	// remove newline from command 
+	command[strlen(command) - 1] = '\0';
+
+	if (command[strlen(command) - 1] == '&') {
+		// remove '&' from command
+		command[strlen(command) - 1] = '\0';
+		return 1;
+	} 
+	else {
+		return 0;
+	}
+}
+
+// Show list of commands and their usage.
+void usage() {
+	printf("HAW-Shell is a shell, which can execute built-in commands (without options, arguments) and following built-in commands:\n");
+    printf("quit        - close HAW-Shell\n");
+    printf("version     - show the current version of HAW-Shell\n");
+    printf("/[pathname] - change the current working directory to pathname\n");
+    printf("help        - show this help message\n");
+}
+
+// Print current version of HAW-Shell. 
+void version() {
+	printf("HAW-Shell Version 1.0 - Author: Huy Tran & Tri Pham\n");
 }
