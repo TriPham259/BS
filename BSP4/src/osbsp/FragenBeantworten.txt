@@ -1,0 +1,13 @@
+									    (Hauptspeicherzuteilung | Lokalitätsfaktor)
+							10|1		10|10		10|100		10|1000		15|10		20|10
+							
+		CLOCK zu FIFO		1.4			-3.32		-3.85		-50			-2.8		0.0		%											
+								
+		FIFO zu RANDOM		-1.01		-3.67		-18.52		0.0			0.0			0.0		%
+		
+		RANDOM zu CLOCK		-0.4		6.38		18.75		33.33		2.73		0.0		%	
+		
+Zur Leistungssteigerung bei schlechtem Lokalitätsverhalten bracht ein Prozess mehr Seiten in RAM: 
+- RAM erweitern => maximale Anzahl der Seiten erhöhen
+- andere Prozesse/Programme beenden oder abschalten, damit mehr Seiten zur Verfügung stehen
+- virtuellen Speicher vergrößen
